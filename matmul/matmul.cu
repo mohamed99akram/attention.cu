@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <cuda.h>
 
+#define TILE_WIDTH 16
+
 /* read 2D matrix from file - 
 
 row col
@@ -75,7 +77,7 @@ float* matmul(float* A, float* B, int rowA, int colA, int rowB, int colB) {
     return C;
 }
 
-__global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, int rowB, int colB) {
+__global__ void matmulKernel2(float* A, float* B, float* C, int rowA, int colA, int rowB, int colB) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -87,7 +89,41 @@ __global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, i
         C[row * colB + col] = value;
     }
 }
-float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB) {
+__global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, int rowB, int colB) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    float value = 0.0f;
+    for(unsigned int stride = 0; stride < colA; stride += TILE_WIDTH) {
+        // Shared memory for A and B
+        __shared__ float As[TILE_WIDTH][TILE_WIDTH];
+        __shared__ float Bs[TILE_WIDTH][TILE_WIDTH];
+
+        // Load A and B into shared memory
+        if (row < rowA && stride + threadIdx.x < colA) {
+            As[threadIdx.y][threadIdx.x] = A[row * colA + stride + threadIdx.x];
+        } else {
+            As[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        if (stride + threadIdx.y < colA && col < colB) {
+            Bs[threadIdx.y][threadIdx.x] = B[(stride + threadIdx.y) * colB + col];
+        } else {
+            Bs[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        __syncthreads();
+
+        // Compute the value
+        for (int k = 0; k < TILE_WIDTH; k++) {
+            value += As[threadIdx.y][k] * Bs[k][threadIdx.x];
+        }
+        __syncthreads();
+    }
+    // Write the result to global memory
+    if (row < rowA && col < colB) {
+        C[row * colB + col] = value;
+    }
+}
+// TODO - give option to use A, B if they are already on the GPU?
+float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB){
     assert(colA == rowB); // Ensure the matrices can be multiplied
     float* C = (float*)malloc(rowA * colB * sizeof(float));
     if (C == NULL) {
