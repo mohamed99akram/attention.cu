@@ -74,6 +74,47 @@ float* matmul(float* A, float* B, int rowA, int colA, int rowB, int colB) {
     }
     return C;
 }
+
+__global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, int rowB, int colB) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < rowA && col < colB) {
+        float value = 0;
+        for (int k = 0; k < colA; k++) {
+            value += A[row * colA + k] * B[k * colB + col];
+        }
+        C[row * colB + col] = value;
+    }
+}
+float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB) {
+    assert(colA == rowB); // Ensure the matrices can be multiplied
+    float* C = (float*)malloc(rowA * colB * sizeof(float));
+    if (C == NULL) {
+        fprintf(stderr, "Error allocating memory for result matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    // ++++++++++++ Allocate GPU float* matrices ++++++++++++
+    float *d_A, *d_B, *d_C;
+    cudaMalloc((void**)&d_A, rowA * colA * sizeof(float));
+    cudaMalloc((void**)&d_B, rowB * colB * sizeof(float));
+    cudaMalloc((void**)&d_C, rowA * colB * sizeof(float));
+
+    // ++++++++++++ Copy A and B to GPU ++++++++++++
+    cudaMemcpy(d_A, A, rowA * colA * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, rowB * colB * sizeof(float), cudaMemcpyHostToDevice);
+    // ++++++++++++ Launch kernel ++++++++++++
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((colB + threadsPerBlock.x - 1) / threadsPerBlock.x, (rowA + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    matmulKernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, rowA, colA, rowB, colB);
+    // ++++++++++++ Copy result back to CPU ++++++++++++
+    cudaMemcpy(C, d_C, rowA * colB * sizeof(float), cudaMemcpyDeviceToHost);
+    // ++++++++++++ Free GPU memory ++++++++++++
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    return C;
+}
 int main(int argc, char **argv){
     int rowA, colA;
     int rowB, colB;
@@ -84,11 +125,18 @@ int main(int argc, char **argv){
     float* matrixC = matmul(matrixA, matrixB, rowA, colA, rowB, colB);
     printMatrix(matrixC, rowA, colB);
 
+    float* matrixC_GPU = matmulGPU(matrixA, matrixB, rowA, colA, rowB, colB);
+    printMatrix(matrixC_GPU, rowA, colB);
+    // ++++++++++++ Free CPU memory ++++++++++++
+    free(matrixC_GPU);
     free(matrixA);
     free(matrixB);
     free(matrixC);
 
+    
     matrixA = NULL;
     matrixB = NULL;
     matrixC = NULL;
+    matrixC_GPU = NULL;
+    
 }
