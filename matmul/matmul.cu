@@ -123,6 +123,7 @@ __global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, i
     }
 }
 // TODO - give option to use A, B if they are already on the GPU?
+// TODO - To do so, pass already allocated pointers to the function
 float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB){
     assert(colA == rowB); // Ensure the matrices can be multiplied
     float* C = (float*)malloc(rowA * colB * sizeof(float));
