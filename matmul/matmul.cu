@@ -57,14 +57,38 @@ void printMatrix(float* matrix, int row, int col) {
         printf("\n");
     }
 }
-
+float* matmul(float* A, float* B, int rowA, int colA, int rowB, int colB) {
+    assert(colA == rowB); // Ensure the matrices can be multiplied
+    float* C = (float*)malloc(rowA * colB * sizeof(float));
+    if (C == NULL) {
+        fprintf(stderr, "Error allocating memory for result matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < rowA; i++) {
+        for (int j = 0; j < colB; j++) {
+            C[i * colB + j] = 0;
+            for (int k = 0; k < colA; k++) {
+                C[i * colB + j] += A[i * colA + k] * B[k * colB + j];
+            }
+        }
+    }
+    return C;
+}
 int main(int argc, char **argv){
     int rowA, colA;
     int rowB, colB;
-    float* matrixA = readFile("matrix1.txt", &rowA, &colA);
-    float* matrixB = readFile("matrix2.txt", &rowB, &colB);
+    float* matrixA = readFile("data/matrix1.txt", &rowA, &colA);
+    float* matrixB = readFile("data/matrix2.txt", &rowB, &colB);
     printMatrix(matrixA, rowA, colA);
     printMatrix(matrixB, rowB, colB);
+    float* matrixC = matmul(matrixA, matrixB, rowA, colA, rowB, colB);
+    printMatrix(matrixC, rowA, colB);
+
     free(matrixA);
-    matrixA = NULL;    
+    free(matrixB);
+    free(matrixC);
+
+    matrixA = NULL;
+    matrixB = NULL;
+    matrixC = NULL;
 }
