@@ -1,5 +1,5 @@
 
-# TO RUN: python3 generate_matrix.py 4 5 matrix2.txt
+# TO RUN: python3 scripts/generate_matrix.py 50 100  data/matrix2.txt
 
 import numpy as np
 import argparse

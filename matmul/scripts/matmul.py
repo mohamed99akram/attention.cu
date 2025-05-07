@@ -1,3 +1,7 @@
+
+# python3 scripts/matmul.py
+
+
 import numpy as np
 
 a1 = np.loadtxt("data/matrix1.txt", skiprows=1, delimiter=" ", dtype=np.float32)
