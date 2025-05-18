@@ -1,3 +1,4 @@
+- `cd attention`
 - To compile test_matmul:
     - `make test_matmul`
     - ./bin/test_matmul > data/results.txt
