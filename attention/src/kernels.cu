@@ -88,10 +88,52 @@ float* matmulCPU(float* A, float* B, int rowA, int colA, int rowB, int colB) {
     return C;
 }
 
-__global__ void softmaxKernel(float* input, int size) {
-    // ...
+// M rows, N columns: MxN
+// TODO make reductions over columns dimension
+// TODO input[row*N+col] inside the code seems to need optimization - coalesing? shared? - also for output
+// from: https://github.com/vectorquantized/100daysofcuda/blob/main/src/day_7/online_softmax.cu
+__global__ void softmaxKernel(float* input, float* output, int M, int N) {
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    
+    if (row < M){
+        float max_val = -__FLT_MAX__;
+        float norm = 0;
+
+        for (int col = 0; col < N; col++){
+            float val = input[row * N + col];
+            if(val > max_val){
+                norm *= expf(max_val - val);
+                max_val = val;
+            }
+            norm += expf(val - max_val);
+        }
+
+        for (int col = 0; col < N; col++){
+            output[row * N + col] = expf(input[row * N + col] - max_val) / (norm + EPSILON);
+        }
+    }
 }
 
-void online_softmax(float* input, int size) {
-    // ...
+float* online_softmax(float* input, int M, int N) {
+    float* output = (float*) malloc(M * N * sizeof(float));
+    if (output == NULL){
+        fprintf(stderr, "Error allocating memory for result matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    // +++++++++++++ Allocate GPU float* matrices +++++++++
+    float *d_input, *d_output;
+    cudaMalloc((void**)&d_input, M * N * sizeof(float));
+    cudaMalloc((void**)&d_output, M * N * sizeof(float));
+
+    cudaMemcpy(d_input, input, M * N * sizeof(float), cudaMemcpyHostToDevice);
+
+    dim3 threadsPerBlock(256);
+    dim3 numBlocks((M + threadsPerBlock.x - 1) / threadsPerBlock.x);
+    softmaxKernel<<<numBlocks, threadsPerBlock>>>(d_input, d_output, M, N);
+    cudaMemcpy(output, d_output, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_input);
+    cudaFree(d_output);
+
+    return output;
 }

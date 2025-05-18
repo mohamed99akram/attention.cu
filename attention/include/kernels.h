@@ -2,6 +2,7 @@
 #define KERNELS_H
 
 #define TILE_WIDTH 16
+#define EPSILON 1e-8
 
 // Matrix multiplication
 float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB);
@@ -9,7 +10,7 @@ __global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, i
 float* matmulCPU(float* A, float* B, int rowA, int colA, int rowB, int colB);
 
 // Softmax
-void online_softmax(float* input, int size);
-__global__ void softmaxKernel(float* input, int size);
+float* online_softmax(float* input, int M, int N);
+__global__ void softmaxKernel(float* input, float* output, int M, int N);
 
 #endif

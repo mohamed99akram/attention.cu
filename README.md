@@ -1,4 +1,9 @@
 - `cd attention`
 - To compile test_matmul:
     - `make test_matmul`
-    - ./bin/test_matmul > data/results.txt
+    - ./bin/test_matmul > data/result_cu.txt
+    - To run python tests: `python3 scripts/matmul.py` -> results are in data/result_py.txt
+- To compile test_softmax:
+    - `make test_softmax`
+    - `./bin/test_softmax > data/result_cu.txt`
+    - To run python tests: `python3 scripts/softmax.py` -> results are in data/result_py.txt

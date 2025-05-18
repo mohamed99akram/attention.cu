@@ -1,11 +1,13 @@
 
-# TO RUN: python3 scripts/generate_matrix.py 50 100  data/matrix2.txt
+# TO RUN:
+# python3 scripts/generate_matrix.py 100 50  data/matrix1.txt
+# python3 scripts/generate_matrix.py 50 100  data/matrix2.txt
 
 import numpy as np
 import argparse
 import os
 def generate_matrix(rows, cols):
-    return np.random.rand(rows, cols) * 1000
+    return np.random.rand(rows, cols)
 
 def save_matrix(matrix, filename, rows, cols):
     # save to file : row col \n matrix
