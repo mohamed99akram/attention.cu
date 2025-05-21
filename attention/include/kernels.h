@@ -13,4 +13,7 @@ float* matmulCPU(float* A, float* B, int rowA, int colA, int rowB, int colB);
 float* online_softmax(float* input, int M, int N);
 __global__ void softmaxKernel(float* input, float* output, int M, int N);
 
+// Transpose
+float* tiled_tranpose(float* input, int M, int N);
+__global__ void tiled_transposeKernel(float* input, float* output, int M, int N);
 #endif

@@ -91,7 +91,7 @@ float* matmulCPU(float* A, float* B, int rowA, int colA, int rowB, int colB) {
 // M rows, N columns: MxN
 // TODO make reductions over columns dimension
 // TODO input[row*N+col] inside the code seems to need optimization - coalesing? shared? - also for output
-// from: https://github.com/vectorquantized/100daysofcuda/blob/main/src/day_7/online_softmax.cu
+// inspired from: https://github.com/vectorquantized/100daysofcuda/blob/main/src/day_7/online_softmax.cu
 __global__ void softmaxKernel(float* input, float* output, int M, int N) {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     
@@ -135,5 +135,50 @@ float* online_softmax(float* input, int M, int N) {
     cudaFree(d_input);
     cudaFree(d_output);
 
+    return output;
+}
+
+// inspired from https://github.com/vectorquantized/100daysofcuda/blob/main/src/day_10/self_attention.cu
+// TODO may need to consider torch-like movement-free transpose
+// input: MxN, output: NxM
+__global__ void tiled_transposeKernel(float* input, float* output, int M, int N){
+    __shared__ float temp[TILE_WIDTH][TILE_WIDTH]; // TODO try TILE_WIDTH+1 & compare
+
+    int row = blockIdx.y * TILE_WIDTH + threadIdx.y;
+    int col = blockIdx.x * TILE_WIDTH + threadIdx.x;
+
+    if (row < M && col < N){
+        temp[threadIdx.y][threadIdx.x] = input[row * N + col];
+    }
+    __syncthreads();
+
+    int row_t = col;
+    int col_t = row;
+    int M_t = N;
+    int N_t = M;
+    if(row_t < M_t && col_t < N_t){
+        output[row_t * N_t + col_t] = temp[threadIdx.y][threadIdx.x];
+    }
+}
+float* tiled_tranpose(float* input, int M, int N){
+    float* output = (float*) malloc(M*N*sizeof(float));
+    if (output == NULL){
+        fprintf(stderr, "Error allocating memory for result matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    float *d_input, *d_output;
+    cudaMalloc((void**)&d_input, M*N*sizeof(float));
+    cudaMalloc((void**)&d_output, M*N*sizeof(float));
+
+    cudaMemcpy(d_input, input, M * N * sizeof(float), cudaMemcpyHostToDevice);
+
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, ( M + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    tiled_transposeKernel<<<numBlocks, threadsPerBlock>>>(d_input, d_output, M, N);
+    cudaMemcpy(output, d_output, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_input);
+    cudaFree(d_output);
     return output;
 }

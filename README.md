@@ -15,3 +15,10 @@
     - To run python tests: `python3 scripts/softmax.py` -> results are in data/result_py.txt
     - To compare two output matrices: 
         - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
+
+- To compile test_transpose:
+    - `make test_transpose`
+    - `./bin/test_transpose > data/result_cu.txt`
+    - To run python tests: `python3 scripts/transpose.py` -> results are in data/result_py.txt
+    - To compare two output matrices: 
+        - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
