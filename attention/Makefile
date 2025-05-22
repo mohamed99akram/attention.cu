@@ -1,8 +1,8 @@
 # Makefile
 NVCC = nvcc
-NVCCFLAGS = -arch=sm_50 -gencode=arch=compute_50,code=sm_50
+# NVCCFLAGS = -arch=sm_50 -gencode=arch=compute_50,code=sm_50
 # For debugging
-# NVCCFLAGS = -arch=sm_50 -G -g -gencode=arch=compute_50,code=sm_50
+NVCCFLAGS = -arch=sm_50 -G -g -gencode=arch=compute_50,code=sm_50
 
 SRC = src
 INCLUDE = include
@@ -22,6 +22,9 @@ test_softmax: tests/test_softmax.cu $(UTILS) $(KERNELS)
 
 test_transpose: tests/test_transpose.cu $(UTILS) $(KERNELS)
 	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_transpose
+
+test_self_attention: tests/test_self_attention.cu $(UTILS) $(KERNELS)
+	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_self_attention
 
 clean:
 	rm -f $(BIN)/*

@@ -22,3 +22,16 @@
     - To run python tests: `python3 scripts/transpose.py` -> results are in data/result_py.txt
     - To compare two output matrices: 
         - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
+
+
+- To compile test_self_attention:
+    - Generate Q, K, V
+    -  `python3 scripts/generate_matrix.py 10 4  data/Q.txt`
+    -  `python3 scripts/generate_matrix.py 10 4  data/K.txt`
+    -  `python3 scripts/generate_matrix.py 10 4  data/V.txt`
+    - Compile self attention
+    - `make test_self_attention`
+    - `./bin/test_self_attention > data/result_cu.txt`
+    - To run python tests: `python3 scripts/self_attention.py` -> results are in data/result_py.txt
+    - To compare two output matrices: 
+        - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`

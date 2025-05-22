@@ -16,4 +16,9 @@ __global__ void softmaxKernel(float* input, float* output, int M, int N);
 // Transpose
 float* tiled_tranpose(float* input, int M, int N);
 __global__ void tiled_transposeKernel(float* input, float* output, int M, int N);
+
+// Self Attention
+// float* self_attentionGPU(float* Q, float* K, float* V, int L, int d_k);
+float* self_attention(float* Q, float* K, float* V, int L, int d_k);
+
 #endif
