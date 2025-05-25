@@ -3,6 +3,9 @@
 # python3 scripts/generate_matrix.py 100 50  data/matrix1.txt
 # python3 scripts/generate_matrix.py 50 100  data/matrix2.txt
 
+# python scripts/generate_matrix.py 50 100  data/matrix2.txt
+# python scripts/generate_matrix.py 50 100  data/matrix2.txt
+
 import numpy as np
 import argparse
 import os

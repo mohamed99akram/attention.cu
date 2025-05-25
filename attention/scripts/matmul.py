@@ -1,6 +1,8 @@
 
 # python3 scripts/matmul.py
 
+# python scripts/matmul.py
+
 
 import numpy as np
 
