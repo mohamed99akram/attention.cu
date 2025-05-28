@@ -72,8 +72,8 @@ float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB){
 /* A@B.T , A.shape=B.shape=(M, N)*/
 __global__ void matmulKernelMerged(float* A, float* B, float* C, int M, int N) {
     
-    int row1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int row2 = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
     float value = 0.0f;
     for(unsigned int stride = 0; stride < N; stride += TILE_WIDTH) {
         // Shared memory for A and B
@@ -81,27 +81,27 @@ __global__ void matmulKernelMerged(float* A, float* B, float* C, int M, int N) {
         __shared__ float Bs[TILE_WIDTH][TILE_WIDTH];
 
         // Load A and B into shared memory
-        if (row2 < M && stride + threadIdx.x < N) {
-            As[threadIdx.y][threadIdx.x] = A[row2 * N + stride + threadIdx.x];
+        if (row < M && stride + threadIdx.x < N) {
+            As[threadIdx.y][threadIdx.x] = A[row * N + stride + threadIdx.x];
         } else {
             As[threadIdx.y][threadIdx.x] = 0.0f;
         }
-        if (stride + threadIdx.y < M && row1 < N) {
-            Bs[threadIdx.y][threadIdx.x] = B[(stride + threadIdx.y) * N + row1];
+        int b_row = blockIdx.x * blockDim.x + threadIdx.y;  
+        if (stride + threadIdx.x < N && b_row < M) {
+            Bs[threadIdx.y][threadIdx.x] = B[b_row * N + stride + threadIdx.x];
         } else {
             Bs[threadIdx.y][threadIdx.x] = 0.0f;
         }
         __syncthreads();
         // Compute the value
         for (int k = 0; k < TILE_WIDTH; k++) {
-            // printf("For thread (%d, %d): Multiplying %fx%f\n", threadIdx.x, threadIdx.y, As[threadIdx.y][k], Bs[threadIdx.y][k]);
-            value += As[threadIdx.x][k] * Bs[threadIdx.y][k];
+            value += As[threadIdx.y][k] * Bs[threadIdx.x][k];
         }
         __syncthreads();
     }
     // Write the result to global memory
-    if (row2 < M && row1 < M) {
-        C[row1 * M + row2] = value;
+    if (row < M && col < M) {
+        C[row * M + col] = value;
     }
 }
 /* A@B.T, A.shape=B.shape=MxN*/
