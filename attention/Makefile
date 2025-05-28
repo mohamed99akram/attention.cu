@@ -17,6 +17,9 @@ all: test_matmul test_softmax
 test_matmul: tests/test_matmul.cu $(UTILS) $(KERNELS)
 	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_matmul
 
+test_matmul_merged: tests/test_matmul_merged.cu $(UTILS) $(KERNELS)
+	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_matmul_merged
+
 test_softmax: tests/test_softmax.cu $(UTILS) $(KERNELS)
 	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_softmax
 

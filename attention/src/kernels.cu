@@ -69,6 +69,69 @@ float* matmulGPU(float* A, float* B, int rowA, int colA, int rowB, int colB){
     return C;
 }
 
+/* A@B.T , A.shape=B.shape=(M, N)*/
+__global__ void matmulKernelMerged(float* A, float* B, float* C, int M, int N) {
+    
+    int row1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int row2 = blockIdx.y * blockDim.y + threadIdx.y;
+    float value = 0.0f;
+    for(unsigned int stride = 0; stride < N; stride += TILE_WIDTH) {
+        // Shared memory for A and B
+        __shared__ float As[TILE_WIDTH][TILE_WIDTH];
+        __shared__ float Bs[TILE_WIDTH][TILE_WIDTH];
+
+        // Load A and B into shared memory
+        if (row2 < M && stride + threadIdx.x < N) {
+            As[threadIdx.y][threadIdx.x] = A[row2 * N + stride + threadIdx.x];
+        } else {
+            As[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        if (stride + threadIdx.y < M && row1 < N) {
+            Bs[threadIdx.y][threadIdx.x] = B[(stride + threadIdx.y) * N + row1];
+        } else {
+            Bs[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        __syncthreads();
+        // Compute the value
+        for (int k = 0; k < TILE_WIDTH; k++) {
+            // printf("For thread (%d, %d): Multiplying %fx%f\n", threadIdx.x, threadIdx.y, As[threadIdx.y][k], Bs[threadIdx.y][k]);
+            value += As[threadIdx.x][k] * Bs[threadIdx.y][k];
+        }
+        __syncthreads();
+    }
+    // Write the result to global memory
+    if (row2 < M && row1 < M) {
+        C[row1 * M + row2] = value;
+    }
+}
+/* A@B.T, A.shape=B.shape=MxN*/
+float* matmulGPUMerged(float* A, float* B, int M, int N){
+    float* C = (float*)malloc(M * M * sizeof(float));
+    if (C == NULL) {
+        fprintf(stderr, "Error allocating memory for result matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    // ++++++++++++ Allocate GPU float* matrices ++++++++++++
+    float *d_A, *d_B, *d_C;
+    cudaMalloc((void**)&d_A, M * N * sizeof(float));
+    cudaMalloc((void**)&d_B, M * N * sizeof(float));
+    cudaMalloc((void**)&d_C, M * M * sizeof(float));
+
+    // ++++++++++++ Copy A and B to GPU ++++++++++++
+    cudaMemcpy(d_A, A, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    // ++++++++++++ Launch kernel ++++++++++++
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks((M + threadsPerBlock.x - 1) / threadsPerBlock.x, (M + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    matmulKernelMerged<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, M, N);
+    // ++++++++++++ Copy result back to CPU ++++++++++++
+    cudaMemcpy(C, d_C, M * M * sizeof(float), cudaMemcpyDeviceToHost);
+    // ++++++++++++ Free GPU memory ++++++++++++
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    return C;
+}
 
 float* matmulCPU(float* A, float* B, int rowA, int colA, int rowB, int colB) {
     assert(colA == rowB); // Ensure the matrices can be multiplied
