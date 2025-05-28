@@ -13,6 +13,17 @@
         - To compare two output matrices: 
             - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
 
+- To compile test_matmul_merged:
+    - Generate Data
+        - `python3 scripts/generate_matrix.py 2048 512  data/matrix1.txt`
+        - `python3 scripts/generate_matrix.py 2048 512  data/matrix2.txt`
+    - Compile
+        - `make test_matmul_merged`
+        - `./bin/test_matmul_merged > data/result_cu.txt`
+        - To run python tests: `python3 scripts/matmul_merged.py` -> results are in data/result_py.txt
+        - To compare two output matrices: 
+            - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
+
 - To compile test_softmax:
     - Generate Data
         - `python3 scripts/generate_matrix.py 50 100  data/matrix2.txt`
