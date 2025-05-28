@@ -1,3 +1,4 @@
+# To Run
 - `cd attention`
 - To generate a random matrix of size 100x50 and save at data/matrix1.txt:
     - `python3 scripts/generate_matrix.py 100 50  data/matrix1.txt`
@@ -65,3 +66,26 @@
     - To run python tests: `python3 scripts/self_attention.py` -> results are in data/result_py.txt
     - To compare two output matrices: 
         - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
+
+
+# Profiling
+## Generating testcases
+for the following sizes (32, 256, 1024, 2048, 32768) instead of 1024
+-  `python3 scripts/generate_matrix.py 1024 512  data/Q.txt`
+-  `python3 scripts/generate_matrix.py 1024 512  data/K.txt`
+-  `python3 scripts/generate_matrix.py 1024 512  data/V.txt`
+
+## Self Attention with CUDA with transpose
+- `make test_self_attention`
+- `nvprof ./bin/test_self_attention > data/result_cu.txt`
+
+## Self Attention with CUDA without transpose
+- `make test_self_attention_no_transpose`
+- `nvprof ./bin/test_self_attention_no_transpose > data/result_cu.txt`
+
+## Self Attention with torch on CPU
+- `python3 scripts/timed_self_attention.py`
+## Self Attention with torch on GPU
+- `python3 scripts/timed_gpu_self_attention.py`
+## Self Attention with C on CPU
+- ``
