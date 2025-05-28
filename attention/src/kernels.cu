@@ -349,8 +349,6 @@ float* self_attention_no_transpose(float* Q, float* K, float* V, int L, int d_k)
     float *d_Q; // L x d_k
     float *d_K; // L x d_k
     float *d_V; // L x d_k 
-    // float *d_KT; // d_k x L -- Output of K.T
-    // float *d_QKT; // L x L -- ouput of Q@K.T
     float *d_QKT2; // L x L -- Output of Q@K.T/sqrt(d_k)
     float *d_S; // L x L -- Output of Softmax(Q@K.T/sqrt(d_k))
 
@@ -359,8 +357,6 @@ float* self_attention_no_transpose(float* Q, float* K, float* V, int L, int d_k)
     cudaMalloc((void**)&d_Q, L * d_k * sizeof(float));
     cudaMalloc((void**)&d_K, L * d_k * sizeof(float));
     cudaMalloc((void**)&d_V, L * d_k * sizeof(float));
-    // cudaMalloc((void**)&d_KT, d_k * L * sizeof(float));
-    // cudaMalloc((void**)&d_QKT, L * L * sizeof(float));
     cudaMalloc((void**)&d_QKT2, L * L * sizeof(float));
     cudaMalloc((void**)&d_S, L * L * sizeof(float));
 
@@ -369,22 +365,11 @@ float* self_attention_no_transpose(float* Q, float* K, float* V, int L, int d_k)
     cudaMemcpy(d_K, K, L * d_k * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_V, V, L * d_k * sizeof(float), cudaMemcpyHostToDevice);
 
-    // Take Transpose of K
     dim3 threadsPerBlock(16, 16);
-    // dim3 numBlocks1((d_k + threadsPerBlock.x - 1) / threadsPerBlock.x, ( L + threadsPerBlock.y - 1) / threadsPerBlock.y);
-
-    // tiled_transposeKernel<<<numBlocks1, threadsPerBlock>>>(d_K, d_KT, L, d_k);
-
-    // Compute Q@K.T
-    // dim3 numBlocks2((L + threadsPerBlock.x - 1) / threadsPerBlock.x, (L + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    // matmulKernel<<<numBlocks2, threadsPerBlock>>>(d_Q, d_KT, d_QKT, L, d_k, d_k, L);
     
     // Compute Q@K.T / sqrt(d_k)
     float rec_sq_dk = 1 / sqrt(d_k); // reciprocal of square root of d_k
-    
-    // dim3 threadsPerBlock3(256);
-    // dim3 numBlocks3((L * L + threadsPerBlock3.x - 1) / threadsPerBlock3.x);
-    // mul<<<numBlocks3, threadsPerBlock3>>>(d_QKT, d_QKT2, rec_sq_dk, L * L);
+
     dim3 numBlocks((L + threadsPerBlock.x - 1) / threadsPerBlock.x, (L + threadsPerBlock.y - 1) / threadsPerBlock.y);
     matmulKernelMerged<<<numBlocks, threadsPerBlock>>>(d_Q, d_K, d_QKT2, L, d_k, rec_sq_dk);
     // Compute Softmax(Q@K.T/sqrt(d_k))
@@ -403,8 +388,6 @@ float* self_attention_no_transpose(float* Q, float* K, float* V, int L, int d_k)
     cudaFree(d_Q);
     cudaFree(d_K);
     cudaFree(d_V);
-    // cudaFree(d_KT);
-    // cudaFree(d_QKT);
     cudaFree(d_QKT2);
     cudaFree(d_S);
 
