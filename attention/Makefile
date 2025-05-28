@@ -1,8 +1,8 @@
 # Makefile
 NVCC = nvcc
-# NVCCFLAGS = -arch=sm_50 -gencode=arch=compute_50,code=sm_50
+NVCCFLAGS = -arch=sm_50 -gencode=arch=compute_50,code=sm_50
 # For debugging
-NVCCFLAGS = -arch=sm_50 -G -g -gencode=arch=compute_50,code=sm_50
+# NVCCFLAGS = -arch=sm_50 -G -g -gencode=arch=compute_50,code=sm_50
 
 SRC = src
 INCLUDE = include
