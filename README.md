@@ -53,3 +53,15 @@
     - To run python tests: `python3 scripts/self_attention.py` -> results are in data/result_py.txt
     - To compare two output matrices: 
         - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`
+
+- To compile test_self_attention_no_transpose:
+    - Generate Q, K, V
+    -  `python3 scripts/generate_matrix.py 1024 64  data/Q.txt`
+    -  `python3 scripts/generate_matrix.py 1024 64  data/K.txt`
+    -  `python3 scripts/generate_matrix.py 1024 64  data/V.txt`
+    - Compile self attention
+    - `make test_self_attention_no_transpose`
+    - `./bin/test_self_attention_no_transpose > data/result_cu.txt`
+    - To run python tests: `python3 scripts/self_attention.py` -> results are in data/result_py.txt
+    - To compare two output matrices: 
+        - `python3 scripts/compare.py data/result_cu.txt data/result_py.txt`

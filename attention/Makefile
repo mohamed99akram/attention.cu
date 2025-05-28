@@ -29,5 +29,8 @@ test_transpose: tests/test_transpose.cu $(UTILS) $(KERNELS)
 test_self_attention: tests/test_self_attention.cu $(UTILS) $(KERNELS)
 	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_self_attention
 
+test_self_attention_no_transpose: tests/test_self_attention_no_transpose.cu $(UTILS) $(KERNELS)
+	$(NVCC) $(NVCCFLAGS) $^ $(INCLUDES) -o $(BIN)/test_self_attention_no_transpose
+
 clean:
 	rm -f $(BIN)/*
