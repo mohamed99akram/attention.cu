@@ -24,23 +24,6 @@ float* read_matrix(const char* filename, int* rows, int* cols) {
     return matrix;
 }
 
-void softmax(float* x, int row_index, int size) {
-    float max_val = x[row_index * size];
-    for (int i = 1; i < size; i++) {
-        if (x[row_index * size + i] > max_val) max_val = x[row_index * size + i];
-    }
-    
-    float sum = 0.0;
-    for (int i = 0; i < size; i++) {
-        x[row_index * size + i] = expf(x[row_index * size + i] - max_val);
-        sum += x[row_index * size + i];
-    }
-    
-    for (int i = 0; i < size; i++) {
-        x[row_index * size + i] /= sum;
-    }
-}
-
 int main() {
     // Read matrices
     int q_rows, q_cols, k_rows, k_cols, v_rows, v_cols;
