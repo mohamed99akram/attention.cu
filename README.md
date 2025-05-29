@@ -79,13 +79,19 @@ for the following sizes (32, 256, 1024, 2048, 32768) instead of 1024
 - `make test_self_attention`
 - `nvprof ./bin/test_self_attention > data/result_cu.txt`
 
+- nvcc tests/test_self_attention.cu src/utils.cu src/kernels.cu -Iinclude -o bin/test_self_attention.exe -ccbin "D:\Programs\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.34120\bin"
+- (Through administrator) ncu ./bin/test_self_attention > data/result_cu.txt
+
 ## Self Attention with CUDA without transpose
 - `make test_self_attention_no_transpose`
 - `nvprof ./bin/test_self_attention_no_transpose > data/result_cu.txt`
+
+- nvcc tests/test_self_attention_no_transpose.cu src/utils.cu src/kernels.cu -Iinclude -o bin/test_self_attention_no_transpose.exe -ccbin "D:\Programs\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.34120\bin"
+- (Through administrator) ncu ./bin/test_self_attention_no_transpose > data/result_cu.txt
 
 ## Self Attention with torch on CPU
 - `python3 scripts/timed_self_attention.py`
 ## Self Attention with torch on GPU
 - `python3 scripts/timed_gpu_self_attention.py`
 ## Self Attention with C on CPU
-- ``
+- `script_self_run.bat`

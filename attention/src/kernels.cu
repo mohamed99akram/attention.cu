@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cuda.h>
 #include "kernels.h"
+#include <float.h> // Added to remove the __FLT_MAX__ error
 
 __global__ void matmulKernel(float* A, float* B, float* C, int rowA, int colA, int rowB, int colB) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -161,7 +162,7 @@ __global__ void softmaxKernel(float* input, float* output, int M, int N) {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     
     if (row < M){
-        float max_val = -__FLT_MAX__;
+        float max_val = -FLT_MAX;
         float norm = 0;
 
         for (int col = 0; col < N; col++){
